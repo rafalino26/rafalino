@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
-/* Neon-inspired tokens (dark-only) */
+/* Light theme with purple accent (Tailwind v4 compatible) */
 :root {
-  --bg: #05070a;          /* near-black */
-  --fg: #e6eaf2;          /* soft white */
-  --muted: #9aa4b2;       /* muted text */
-  --card: rgba(255,255,255,0.04);
-  --card-2: rgba(255,255,255,0.06);
-  --border: rgba(255,255,255,0.10);
+  /* Base surfaces */
+  --bg: #0a0017;                 /* very light grey background */
+  --fg: #1b1b1f;                 /* near-black text */
+  --muted: #5f5f6b;              /* muted text */
+  --card: rgba(255,255,255,0.65);
+  --card-2: rgba(255,255,255,0.85);
+  --border: rgba(0,0,0,0.08);
 
-  /* Neon accent (use sparingly) */
-  --neon: #00e5a8;        /* green-teal like Neon */
-  --neon-2: #00c58f;
+  /* Purple accent */
+  --neon: #6623ad;               /* primary purple */
+  --neon-2: #7a3bd1;             /* lighter purple */
 
-  /* Glow shadows */
-  --glow: 0 0 0 1px rgba(0,229,168,0.20), 0 0 24px rgba(0,229,168,0.18);
-  --glow-soft: 0 0 0 1px rgba(0,229,168,0.12), 0 0 18px rgba(0,229,168,0.10);
+  /* Glow shadows (purple, subtle) */
+  --glow: 0 0 0 1px rgba(102,35,173,0.25),
+          0 8px 32px rgba(102,35,173,0.25);
+
+  --glow-soft: 0 0 0 1px rgba(102,35,173,0.18),
+               0 6px 20px rgba(102,35,173,0.18);
 }
 
+/* Tailwind v4 theme tokens (so you can use bg-background, text-foreground, etc.) */
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--fg);
@@ -27,6 +32,11 @@
   --color-border: var(--border);
   --color-neon: var(--neon);
   --color-neon2: var(--neon-2);
+
+  /* optional: radius tokens if you want consistent rounding */
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
 }
 
 html {
@@ -36,26 +46,63 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Helvetica Neue",
+    Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Subtle dotted world-like background vibe (very soft) */
+/* Soft ambient background (purple-tinted, very subtle) */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: 0.28;
+  z-index: -1;
   background:
-    radial-gradient(circle at 20% 30%, rgba(0,229,168,0.12), transparent 40%),
-    radial-gradient(circle at 80% 20%, rgba(0,229,168,0.08), transparent 40%),
-    radial-gradient(circle at 60% 80%, rgba(99,102,241,0.08), transparent 45%),
-    radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: auto, auto, auto, 22px 22px;
-  filter: blur(0px);
+    radial-gradient(circle at 15% 25%, rgba(102,35,173,0.10), transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(122,59,209,0.08), transparent 45%),
+    radial-gradient(circle at 60% 80%, rgba(102,35,173,0.06), transparent 45%),
+    radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: auto, auto, auto, 24px 24px;
 }
 
-/* Nice selection */
+/* Text selection */
 ::selection {
-  background: rgba(0, 229, 168, 0.25);
+  background: rgba(102,35,173,0.25);
+}
+
+/* Nice scrollbar (optional) */
+*::-webkit-scrollbar {
+  width: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+/* Neon glow utilities */
+.glow-soft {
+  filter:
+    drop-shadow(0 0 6px rgba(180,108,255,0.35))
+    drop-shadow(0 0 14px rgba(180,108,255,0.25));
+}
+
+.glow-medium {
+  filter:
+    drop-shadow(0 0 8px rgba(180,108,255,0.55))
+    drop-shadow(0 0 22px rgba(180,108,255,0.45));
+}
+
+.glow-strong {
+  filter:
+    drop-shadow(0 0 10px rgba(180,108,255,0.85))
+    drop-shadow(0 0 28px rgba(180,108,255,0.75))
+    drop-shadow(0 0 48px rgba(180,108,255,0.35));
 }

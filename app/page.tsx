@@ -1,39 +1,25 @@
 import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/sections/HeroSection";
-import AboutSection from "@/components/sections/AboutSection";
-import SkillsSection from "@/components/sections/SkillsSection";
-import ProjectsSection from "@/components/sections/ProjectsSection";
-import ContactSection from "@/components/sections/ContactSection";
-import { Reveal, RevealGroup } from "@/components/motion/Reveal";
+import Hero from "@/components/Hero";
+import Expertise from "@/components/Expertise";
+import Work from "@/components/Work";
+import Experience from "@/components/Experience";
+import Contact from "@/components/Contact";
 
 export default function Page() {
   return (
-    <div>
+    <>
       <Navbar />
-
       <main>
-        {/* Hero usually appears immediately (no need to reveal), but you can if you want */}
-        <HeroSection />
-
-        {/* Wave reveal for the rest */}
-        <RevealGroup>
-          <Reveal>
-            <AboutSection />
-          </Reveal>
-
-          <Reveal>
-            <SkillsSection />
-          </Reveal>
-
-          <Reveal>
-            <ProjectsSection />
-          </Reveal>
-
-          <Reveal>
-            <ContactSection />
-          </Reveal>
-        </RevealGroup>
+        <Hero />
+        <Expertise />
+        <Work />
+        <Experience />
+        <Contact />
       </main>
-    </div>
+
+      <footer className="py-10 text-center text-xs text-muted">
+        Built with Next.js • Motion • 3D • Tailwind v4
+      </footer>
+    </>
   );
 }

@@ -1,144 +1,274 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FiMenu, FiX } from "react-icons/fi";
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { SITE } from "@/data/site";
+import { cn } from "@/lib/utils";
 
-const links = [
-  { label: "About", href: "#about" },
-  { label: "Skills", href: "#skills" },
-  { label: "Projects", href: "#projects" },
-  { label: "Contact", href: "#contact" },
-];
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // Close mobile menu event
+  window.dispatchEvent(new CustomEvent("close-menu"));
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const items = useMemo(() => SITE.nav, []);
+  const [active, setActive] = useState(items[0]?.id ?? "home");
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Lock scroll when sidebar open
+  // --- 1. ACTIVE SCROLL TRACKING ---
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    const els = items
+      .map((i) => document.getElementById(i.id))
+      .filter(Boolean) as HTMLElement[];
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        // Find the element that is most visible on screen
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort(
+            (a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0)
+          )[0];
+        if (visible?.target?.id) setActive(visible.target.id);
+      },
+      // Adjust rootMargin to trigger active state when section is near top of screen
+      { threshold: [0.2, 0.5], rootMargin: "-10% 0px -50% 0px" }
+    );
+
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [items]);
+
+  // --- 2. SCROLL STATE & EVENTS ---
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    
+    const onClose = () => setMobileOpen(false);
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("close-menu", onClose);
+
     return () => {
-      document.body.style.overflow = "";
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("close-menu", onClose);
     };
-  }, [open]);
+  }, []);
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-border bg-[rgba(5,7,10,0.70)] backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          {/* Mobile menu button (top-left) */}
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl bg-card hover:shadow-(--glow-soft) transition"
-            aria-label="Open menu"
-          >
-            <FiMenu size={20} />
-          </button>
-
-          {/* Brand */}
-          <a
-            href="#top"
-            className="font-semibold tracking-tight flex items-center gap-2"
-          >
-            <span className="inline-block h-2 w-2 rounded-full bg-neon shadow-(--glow-soft)" />
-            RAFALINO
-          </a>
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6 text-sm text-muted">
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="hover:text-foreground transition"
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav>
-
-          {/* Right CTA (hide on very small, optional) */}
-          <div className="hidden sm:flex items-center gap-3">
-            <a
-              href="#contact"
-              className="rounded-xl px-4 py-2 text-sm font-medium border border-border bg-card hover:shadow-(--glow-soft) transition"
-            >
-              Let’s Talk
-            </a>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Sidebar Overlay */}
-      <div
-        className={`fixed inset-0 z-60 md:hidden transition ${
-          open ? "pointer-events-auto" : "pointer-events-none"
-        }`}
+      <motion.header
+        className="fixed inset-x-0 top-0 z-50"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 4.0 }}
       >
-        {/* Backdrop */}
+        {/* BACKGROUND BLUR */}
         <div
-          className={`absolute inset-0 bg-black/60 transition-opacity ${
-            open ? "opacity-100" : "opacity-0"
-          }`}
-          onClick={() => setOpen(false)}
+          className={cn(
+            "absolute inset-0 transition-all duration-500",
+            scrolled || mobileOpen
+              ? "bg-[#050505]/80 border-b border-white/5"
+              : "bg-transparent border-transparent"
+          )}
         />
 
-        {/* Drawer */}
-        <aside
-          className={`
-            absolute left-0 top-0 h-full w-[78%] max-w-[320px]
-            bg-[rgba(5,7,10,0.96)]
-            border-r border-border
-            backdrop-blur
-            transition-transform
-            ${open ? "translate-x-0" : "-translate-x-full"}
-          `}
+        {/* NEON LINE (Visible on Scroll) */}
+        <div
+          className={cn(
+            "absolute inset-x-0 top-0 h-px transition-opacity duration-500",
+            scrolled ? "opacity-100" : "opacity-0"
+          )}
         >
-          <div className="p-4 flex items-center justify-between border-b border-border">
-            <div className="font-semibold tracking-tight flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-neon shadow-(--glow-soft)" />
-              RAFALINO
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="h-10 w-10 rounded-xl bg-card hover:shadow-(--glow-soft) transition inline-flex items-center justify-center"
-              aria-label="Close menu"
-            >
-              <FiX size={20} />
-            </button>
-          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,#b46cff,transparent)] opacity-40" />
+        </div>
 
-          <nav className="p-4 space-y-2">
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="
-                  block rounded-xl px-4 py-3
-                  text-muted hover:text-foreground
-                  hover:bg-[rgba(255,255,255,0.06)]
-                  transition
-                "
+        <div className="relative mx-auto h-20 max-w-7xl px-4 md:px-6">
+          <div className="flex h-full items-center justify-between">
+            
+            {/* ==============================
+                LEFT: MENU ICON & LOGO
+               ============================== */}
+            <div className="flex items-center gap-6">
+              
+              {/* HAMBURGER ICON (Left Side) */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="group relative z-50 flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
               >
-                {l.label}
-              </a>
-            ))}
+                <motion.span
+                  animate={mobileOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+                  className="h-0.5 w-6 rounded-full bg-white transition-colors group-hover:bg-[#b46cff]"
+                />
+                <motion.span
+                  animate={mobileOpen ? { opacity: 0 } : { opacity: 1 }}
+                  className="h-0.5 w-4 rounded-full bg-white/70 transition-colors group-hover:bg-[#b46cff]"
+                />
+                <motion.span
+                  animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+                  className="h-0.5 w-6 rounded-full bg-white transition-colors group-hover:bg-[#b46cff]"
+                />
+              </button>
 
-            <a
-              href="#contact"
-              onClick={() => setOpen(false)}
-              className="
-                mt-4 block text-center rounded-xl px-4 py-3 font-medium
-                bg-neon text-black shadow-(--glow) hover:opacity-90 transition
-              "
+              {/* LOGO */}
+              <button onClick={() => scrollToId("home")} className="group relative z-50">
+                <span className="text-xl font-bold tracking-tighter md:text-2xl">
+                  <span className="text-[#b46cff] drop-shadow-[0_0_10px_rgba(180,108,255,0.5)]">Rafa</span>
+                  <span className="text-white">lino</span>
+                  <span className="text-[#b46cff] animate-pulse">._</span>
+                </span>
+              </button>
+            </div>
+
+            {/* ==============================
+                RIGHT: DESKTOP NAV
+               ============================== */}
+            <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1">
+              {items.map((item) => {
+                const isActive = active === item.id;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToId(item.id)}
+                    className="group relative flex items-center px-4 py-2 text-sm font-medium transition-colors"
+                  >
+                    {/* FLOATING ACTIVE BACKGROUND (The "Move by itself" part) */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-full bg-white/5"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+
+                    {/* 1. NUMBER (Changes Color + Pulses when active) */}
+                    <span 
+                      className={cn(
+                        "mr-2 font-mono text-xs transition-colors duration-300", 
+                        isActive 
+                          ? "text-[#b46cff] animate-pulse font-bold" // Active: Purple + Pulse
+                          : "text-white/30 group-hover:text-white/60" // Inactive
+                      )}
+                    >
+                      {item.idx}
+                    </span>
+                    
+                    {/* 2. TEXT (Glows when active) */}
+                    <span 
+                      className={cn(
+                        "tracking-wide transition-all duration-300",
+                        isActive 
+                          ? "text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" // Active: Bright + Glow
+                          : "text-white/60 group-hover:text-white"
+                      )}
+                    >
+                      {item.label}
+                    </span>
+
+                    {/* 3. SEMICOLON (Changes Color) */}
+                    <span 
+                      className={cn(
+                        "ml-1 font-mono transition-colors duration-300",
+                        isActive 
+                          ? "text-[#b46cff]" 
+                          : "text-white/30 group-hover:text-[#b46cff]/50"
+                      )}
+                    >
+                      ;
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* ==============================
+          MOBILE SIDEBAR (Left Side)
+         ============================== */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* BACKDROP */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            />
+
+            {/* SIDEBAR PANEL */}
+            <motion.div
+              initial={{ x: "-100%" }} // Slide from LEFT
+              animate={{ x: "0%" }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed bottom-0 left-0 top-0 z-50 w-[80%] max-w-xs border-r border-white/10 bg-[#0a0514] px-6 py-24 shadow-2xl md:hidden"
             >
-              Let’s Talk
-            </a>
-          </nav>
-        </aside>
-      </div>
+              {/* DECORATION */}
+              <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-[#b46cff] opacity-20 blur-[100px]" />
+
+              <nav className="relative flex flex-col gap-6">
+                {items.map((item, i) => {
+                  const isActive = active === item.id;
+                  return (
+                    <motion.button
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + i * 0.1 }}
+                      onClick={() => {
+                        scrollToId(item.id);
+                        setMobileOpen(false);
+                      }}
+                      className="group flex items-center gap-4 text-left"
+                    >
+                      {/* Mobile Number Pulse */}
+                      <span 
+                        className={cn(
+                          "font-mono text-sm transition-colors",
+                          isActive 
+                           ? "text-[#b46cff] animate-pulse" 
+                           : "text-white/30"
+                        )}
+                      >
+                        {item.idx}
+                      </span>
+                      
+                      {/* Mobile Text */}
+                      <span 
+                        className={cn(
+                          "text-xl font-medium transition-colors",
+                          isActive 
+                            ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" 
+                            : "text-white/60"
+                        )}
+                      >
+                        {item.label}
+                      </span>
+                      
+                      {/* Mobile Indicator Arrow */}
+                      {isActive && (
+                         <motion.div 
+                           layoutId="sidebar-dot"
+                           className="h-1.5 w-1.5 rounded-full bg-[#b46cff] shadow-[0_0_10px_#b46cff]"
+                         />
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
